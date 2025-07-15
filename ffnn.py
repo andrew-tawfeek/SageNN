@@ -41,8 +41,25 @@ class NN():
         return f"Feedforward neural network with architecture {self.architecture}."
     
     def show(self):
-        #todo
+        #todo: display the network architecture in a more user-friendly way.
         return
+    
+    def binary_state(self, input_vector):
+        # Returns a single vector of binary states for all hidden neurons (1 if on, 0 if off).
+        if isinstance(input_vector, list):
+            input_vector = vector(QQ, input_vector)
+        elif not hasattr(input_vector, 'parent'):
+            raise TypeError("Input must be a list or a vector.")
+        assert len(input_vector) == self.architecture[0], "Input vector size must match the first layer size."
+        output = input_vector
+        states = []
+        for i in range(len(self.architecture) - 1):
+            output = self.weights[i] * output + self.biases[i]
+            output = output.apply_map(relu)
+            # Only collect hidden layer states (exclude output layer)
+            if i < len(self.architecture) - 2:
+                states.extend([1 if x > 0 else 0 for x in output])
+        return vector(QQ, states)
 
     def plot3d(self, x_range=(-5, 5), y_range=(-5, 5)):
         # Create a 3D plot of the output of the network for two input variables.
