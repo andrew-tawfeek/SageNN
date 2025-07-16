@@ -72,5 +72,63 @@ class NN():
         return S.show()
         #todo later: allow slicing higher-dimensional inputs
 
+    def plot2d_approx(self, x_range=(-5, 5), density=100):
+        # For every x in the range, compute the binary state of the network.
+        # Every binary state is a differently-colored point in the plot.
+        # This method approximates the binary states by sampling points in the specified range.
+        import matplotlib.pyplot as plt
+        import numpy as np
+        x = np.linspace(x_range[0], x_range[1], density)
+        y = np.linspace(x_range[0], x_range[1], density)
+        X, Y = np.meshgrid(x, y)
+        
+        # Dictionary to store unique binary states and their hex colors
+        state_colors = {}
+        color_data = np.zeros(X.shape, dtype=object)
+        
+        # Generate colors for unique binary states
+        def generate_hex_color(state_tuple):
+            if state_tuple not in state_colors:
+                # Generate a unique hex color based on the binary state
+                hash_val = hash(state_tuple)
+                color = f"#{(hash_val & 0xFFFFFF):06x}"
+                state_colors[state_tuple] = color
+            return state_colors[state_tuple]
+        
+        for i in range(X.shape[0]):
+            for j in range(X.shape[1]):
+                state = self.binary_state([X[i, j], Y[i, j]])
+                state_tuple = tuple(state)
+                color_data[i, j] = generate_hex_color(state_tuple)
+        
+        plt.figure(figsize=(10, 8))
+        
+        # Create a custom colormap for the unique states
+        unique_states = list(state_colors.keys())
+        unique_colors = list(state_colors.values())
+        
+        # Map each position to its corresponding color index
+        color_indices = np.zeros(X.shape)
+        for i in range(X.shape[0]):
+            for j in range(X.shape[1]):
+                state = tuple(self.binary_state([X[i, j], Y[i, j]]))
+                color_indices[i, j] = unique_states.index(state)
+        
+        from matplotlib.colors import ListedColormap
+        cmap = ListedColormap(unique_colors)
+        
+        plt.contourf(X, Y, color_indices, levels=np.arange(-0.5, len(unique_states) + 0.5, 1), cmap=cmap)
+        plt.colorbar(
+            label='Binary State',
+            ticks=range(len(unique_states)),
+            format=plt.FuncFormatter(lambda x, p: str(unique_states[int(x)]) if int(x) < len(unique_states) else '')
+        )
+        plt.xlabel('Input 1')
+        plt.ylabel('Input 2')
+        plt.title('2D Plot of Binary States')
+        plt.show()
+
+
+        
 def relu(x):
     return max(0, x)
